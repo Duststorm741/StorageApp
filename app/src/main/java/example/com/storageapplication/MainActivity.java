@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Add this method to your MainActivity.java
     public void goToSecondActivity(View view) {
         Intent intent = new Intent(this, SecondActivity.class);
         startActivity(intent);
