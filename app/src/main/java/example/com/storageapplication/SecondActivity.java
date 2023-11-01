@@ -23,11 +23,7 @@ import java.io.File;
 
 public class SecondActivity extends AppCompatActivity {
 
-    private ListView fileListView;
-    private Button backButton;
-
     private ArrayAdapter<String> fileListAdapter;
-    private FirebaseStorage storage;
     private StorageReference storageRef;
 
     @Override
@@ -35,11 +31,11 @@ public class SecondActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
 
-        fileListView = findViewById(R.id.fileListView);
-        backButton = findViewById(R.id.backButton);
+        ListView fileListView = findViewById(R.id.fileListView);
+        Button backButton = findViewById(R.id.backButton);
 
         // Initialize Firebase Storage
-        storage = FirebaseStorage.getInstance();
+        FirebaseStorage storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://serverproject-55561.appspot.com/Storage");
 
         // Initialize the ArrayAdapter for the ListView
@@ -70,6 +66,7 @@ public class SecondActivity extends AppCompatActivity {
         });
     }
 
+    // Loads and lists files from Firebase
     private void loadFilesFromStorage() {
         // List all files in your Firebase Storage folder
         storageRef.listAll()

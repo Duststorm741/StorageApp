@@ -19,7 +19,6 @@ import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button selectFileButton;
     private TextView selectedFileTextView;
     private Uri selectedFileUri;
 
@@ -30,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        selectFileButton = findViewById(R.id.selectFileButton);
+        Button selectFileButton = findViewById(R.id.selectFileButton);
         selectedFileTextView = findViewById(R.id.selectedFileTextView);
 
         storageReference = FirebaseStorage.getInstance().getReference(); // Initialize Firebase Storage
@@ -53,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == 1 && resultCode == RESULT_OK) {
             // Get the selected file's URI and display it.
+            assert data != null;
             selectedFileUri = data.getData();
             selectedFileTextView.setText("Selected File: " + selectedFileUri.getPath());
         }
@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Open an InputStream from the selected file and upload it to Firebase Storage.
             InputStream stream = getContentResolver().openInputStream(selectedFileUri);
+            assert stream != null;
             UploadTask uploadTask = fileRef.putStream(stream);
 
             uploadTask.addOnSuccessListener(taskSnapshot -> {
