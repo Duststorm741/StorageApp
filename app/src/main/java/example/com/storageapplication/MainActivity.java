@@ -10,6 +10,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -24,10 +26,40 @@ public class MainActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
 
+    FirebaseAuth auth;
+    Button logout_button;
+    TextView userTextView;
+    FirebaseUser user;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        auth = FirebaseAuth.getInstance();
+        logout_button = findViewById(R.id.logout);
+        userTextView = findViewById(R.id.user_details);
+        user = auth.getCurrentUser();
+
+        if (user == null){
+            Intent intent = new Intent(getApplicationContext(), Login.class);
+            startActivity(intent);
+            finish();
+        }
+        else {
+            userTextView.setText(user.getEmail());
+        }
+
+        logout_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(getApplicationContext(), Login.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         Button selectFileButton = findViewById(R.id.selectFileButton);
         selectedFileTextView = findViewById(R.id.selectedFileTextView);
