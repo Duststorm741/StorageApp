@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
@@ -26,17 +28,23 @@ public class SecondActivity extends AppCompatActivity {
     private ArrayAdapter<String> fileListAdapter;
     private StorageReference storageRef;
 
+    FirebaseAuth auth;
+    FirebaseUser user;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
+
+        auth = FirebaseAuth.getInstance();
+        user = auth.getCurrentUser();
 
         ListView fileListView = findViewById(R.id.fileListView);
         Button backButton = findViewById(R.id.backButton);
 
         // Initialize Firebase Storage
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReferenceFromUrl("gs://serverproject-55561.appspot.com/Storage");
+        storageRef = storage.getReferenceFromUrl("gs://serverproject-55561.appspot.com/" + user.getEmail() +"/Storage");
 
         // Initialize the ArrayAdapter for the ListView
         fileListAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);

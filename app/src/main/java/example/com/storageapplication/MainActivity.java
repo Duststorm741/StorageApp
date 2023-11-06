@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Get a reference to the location where you want to store your file in Firebase Storage
-        StorageReference fileRef = storageReference.child(R.id.user_details + "/Storage/" + System.currentTimeMillis());
+        StorageReference fileRef = storageReference.child(user.getEmail() + "/Storage/" + System.currentTimeMillis());
 
         try {
             // Open an InputStream from the selected file and upload it to Firebase Storage.
