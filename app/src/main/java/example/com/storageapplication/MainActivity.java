@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         userTextView = findViewById(R.id.user_details);
         user = auth.getCurrentUser();
 
+
         if (user == null){
             Intent intent = new Intent(getApplicationContext(), Login.class);
             startActivity(intent);
