@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.SpannableString;
 import android.text.TextUtils;
+import android.text.method.PasswordTransformationMethod;
+import android.text.style.UnderlineSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -49,6 +52,20 @@ public class Register extends AppCompatActivity {
         buttonReg = findViewById(R.id.btn_register);
         progressBar = findViewById(R.id.progressBar);
         textView = findViewById(R.id.loginNow);
+
+        // Get the TextInputEditText inside the TextInputLayout
+        TextInputEditText passwordEditText = findViewById(R.id.password);
+
+        // Set password visibility to false (invisible) initially
+        passwordEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
+
+        // Get the TextView for "Already registered"
+        TextView loginNowTextView = findViewById(R.id.loginNow);
+
+        // Underline the text in the TextView
+        SpannableString content = new SpannableString(loginNowTextView.getText());
+        content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
+        loginNowTextView.setText(content);
 
         textView.setOnClickListener(new View.OnClickListener() {
             @Override

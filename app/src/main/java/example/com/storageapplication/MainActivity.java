@@ -3,6 +3,8 @@ package example.com.storageapplication;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,6 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
 
+    private static final long INACTIVITY_TIMEOUT =60000; // 15 seconds in milliseconds
+    private Handler inactivityHandler;
+    private Runnable inactivityRunnable;
+
     FirebaseAuth auth;
     Button logout_button;
     TextView userTextView;
@@ -41,6 +47,28 @@ public class MainActivity extends AppCompatActivity {
         logout_button = findViewById(R.id.logout);
         userTextView = findViewById(R.id.user_details);
         user = auth.getCurrentUser();
+
+        // Initialize inactivity detection
+        inactivityHandler = new Handler();
+        inactivityRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Redirect to Login activity after inactivity timeout
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(getApplicationContext(), Login.class);
+                startActivity(intent);
+                finish();
+
+                // Display a toast message when the timer runs out and logs the user out
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Session timed out. You have been logged out.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        };
+
 
 
         if (user == null){
@@ -77,6 +105,29 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, 1);
             }
         });
+
+        // Reset inactivity timer whenever user interacts with the activity
+        findViewById(android.R.id.content).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                resetInactivityTimer();
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+        // Reset inactivity timer whenever user interacts with the activity
+        resetInactivityTimer();
+    }
+
+    private void resetInactivityTimer() {
+        // Remove existing callbacks to avoid stacking
+        inactivityHandler.removeCallbacksAndMessages(null);
+        // Set a new callback to redirect to Login activity after the specified inactivity timeout
+        inactivityHandler.postDelayed(inactivityRunnable, INACTIVITY_TIMEOUT);
     }
 
     @Override
