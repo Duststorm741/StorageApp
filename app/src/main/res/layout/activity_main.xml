@@ -9,39 +9,74 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <!-- Title "File Selection" in bold -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="File Selection"
+        android:textSize="20sp" />
+
     <Button
         android:id="@+id/selectFileButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
         android:text="Select File"
         android:onClick="selectFile" />
+
+    <!-- Line separating "Select File" button and "Selected File" text -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@android:color/darker_gray"/>
 
     <TextView
         android:id="@+id/selectedFileTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
+        android:layout_marginBottom="10dp"
         android:text="Selected File: "
         android:textSize="16sp" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
         android:text="Send File"
         android:onClick="onClick" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginBottom="10dp"
+        android:background="@android:color/darker_gray"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Retrieve Files From Firebase"
         android:onClick="goToSecondActivity" />
 
+    <View
+        android:layout_marginTop="200dp"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginBottom="10dp"
+        android:background="@android:color/darker_gray"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Account"
+        android:textSize="20sp" />
+
     <TextView
         android:id="@+id/user_details"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="10dp"
         android:text="Blank" />
+
 
     <Button
         android:id="@+id/logout"
@@ -49,5 +84,12 @@
         android:layout_height="wrap_content"
         android:text="@string/logout"
    />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="85dp"
+        android:contentDescription="@string/loginLockImage"
+        app:srcCompat="@android:drawable/ic_lock_lock" />
 
 </LinearLayout>
