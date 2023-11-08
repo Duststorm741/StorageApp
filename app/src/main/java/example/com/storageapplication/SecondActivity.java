@@ -123,11 +123,12 @@ public class SecondActivity extends AppCompatActivity {
                     // Key found and is a SecretKey, return it
                     return (SecretKey) key;
                 } else {
-                    // Handle the case where the key is not a SecretKey
+                    Toast.makeText(SecondActivity.this, "Key alias is incorrect", Toast.LENGTH_SHORT).show();
                     return null;
                 }
             } else {
                 // Handle the case where the key doesn't exist
+                Toast.makeText(SecondActivity.this, "Key does not exist", Toast.LENGTH_SHORT).show();
                 return null;
             }
         } catch (Exception e) {
@@ -216,12 +217,10 @@ public class SecondActivity extends AppCompatActivity {
                                     .addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
-                                            // Handle the case where metadata retrieval fails
                                             Toast.makeText(SecondActivity.this, "Failed to retrieve metadata", Toast.LENGTH_SHORT).show();
                                         }
                                     });
                         } catch (Exception e) {
-                            // Handle decryption errors here
                             Toast.makeText(SecondActivity.this, "Failed to decrypt the file", Toast.LENGTH_SHORT).show();
                         }
                     }
