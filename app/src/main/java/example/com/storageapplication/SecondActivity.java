@@ -111,6 +111,7 @@ public class SecondActivity extends AppCompatActivity {
                 });
     }
 
+    // Retrieves AES key for decryption
     private SecretKey obtainAESKey() {
         try {
             KeyStore keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);

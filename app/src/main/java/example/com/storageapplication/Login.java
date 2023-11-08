@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.SpannableString;
 import android.text.TextUtils;
+import android.text.method.PasswordTransformationMethod;
+import android.text.style.UnderlineSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -15,6 +18,7 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -48,6 +52,21 @@ public class Login extends AppCompatActivity {
         buttonLogin = findViewById(R.id.btn_login);
         progressBar = findViewById(R.id.progressBar);
         textView = findViewById(R.id.registerNow);
+
+        // Get the TextInputEditText inside the TextInputLayout
+        TextInputEditText passwordEditText = findViewById(R.id.password);
+
+        // Set password visibility to false (invisible) initially
+        passwordEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
+
+        // Get the TextView for "New Account"
+        TextView registerNowTextView = findViewById(R.id.registerNow);
+
+        // Underline the text in the TextView
+        SpannableString content = new SpannableString(registerNowTextView.getText());
+        content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
+        registerNowTextView.setText(content);
+
 
         textView.setOnClickListener(new View.OnClickListener() {
             @Override

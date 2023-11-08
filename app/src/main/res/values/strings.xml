@@ -5,7 +5,7 @@
     <string name="password">Password</string>
     <string name="loginLockImage">LoginLockImage</string>
     <string name="Register">Register</string>
-    <string name="already_registered">Already Registered</string>
+    <string name="already_registered">Back To Login</string>
     <string name="new_account">New Account</string>
     <string name="logout">Logout</string>
 </resources>
