@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
 
-    private static final long INACTIVITY_TIMEOUT =60000; // 15 seconds in milliseconds
+    private static final long INACTIVITY_TIMEOUT =30000; // 15 seconds in milliseconds
     private Handler inactivityHandler;
     private Runnable inactivityRunnable;
 
