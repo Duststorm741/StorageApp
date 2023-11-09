@@ -169,7 +169,7 @@ public class SecondActivity extends AppCompatActivity {
                             // Initialize the cipher for decryption with the combined IV
                             byte[] iv = Arrays.copyOfRange(ivAndEncryptedData, 0, 12); // Assuming a 96-bit IV for GCM
                             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-                            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
+                            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv, 0, 12));
 
                             // Decrypt the data (excluding the IV)
                             byte[] encryptedData = Arrays.copyOfRange(ivAndEncryptedData, 12, ivAndEncryptedData.length);
@@ -240,3 +240,4 @@ public class SecondActivity extends AppCompatActivity {
 
 
 }
+
