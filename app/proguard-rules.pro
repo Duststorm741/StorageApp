@@ -1,1 +1,1 @@
--keep class example.com.storageapplication.** { *; }
+-keep,allowobfuscation class example.com.storageapplication.** { *; }
