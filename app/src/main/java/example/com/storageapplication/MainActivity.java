@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.MotionEvent;
 import android.provider.OpenableColumns;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
@@ -27,15 +26,22 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,9 +50,10 @@ public class MainActivity extends AppCompatActivity {
 
     private StorageReference storageReference;
 
-    private static final long INACTIVITY_TIMEOUT =30000; // 15 seconds in milliseconds
+    private static final long INACTIVITY_TIMEOUT =60000; // in milliseconds, times out after 60 secs/1 minute of inactivity
     private Handler inactivityHandler;
     private Runnable inactivityRunnable;
+
 
     private FirebaseAuth auth;
     private Button logout_button;
@@ -54,8 +61,15 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseUser user;
     private KeyStore keyStore;
 
+
+
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     private static final String AES_ALIAS = "MyAesAlias";
+
+
+    private static final String IP = "10.0.2.2";
+    private static final int port = 5000;
+    private Socket socket = null;
 
 
 
@@ -65,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         auth = FirebaseAuth.getInstance();
         logout_button = findViewById(R.id.logout);
@@ -112,6 +128,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+        connectToBackupServer();
+
+
         Button selectFileButton = findViewById(R.id.selectFileButton);
         selectedFileTextView = findViewById(R.id.selectedFileTextView);
 
@@ -139,6 +159,35 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    private void connectToBackupServer() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    socket = new Socket(IP, port);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    @Override
     public void onUserInteraction() {
         super.onUserInteraction();
         // Reset inactivity timer whenever user interacts with the activity
@@ -153,6 +202,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -163,7 +214,11 @@ public class MainActivity extends AppCompatActivity {
             selectedFileUri = data.getData();
             selectedFileTextView.setText("Selected File: " + selectedFileUri.getPath());
         }
+
+
     }
+
+
 
     // Button click handler for sending the selected file to Firebase Cloud Storage
     public void onClick(View view) {
@@ -173,9 +228,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            // Obtains key for AES and calls the upload and encrypt function
+            // Obtains key and IV for AES and calls the upload and encrypt function for both Firebase + backup server
             SecretKey aesKey = obtainAESKey();
-            uploadEncryptedFile(selectedFileUri, aesKey);
+            byte[] iv = getinitVector();
+
+
+            uploadEncryptedFile(selectedFileUri, aesKey, iv);
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    sendFileToBackupServer(selectedFileUri, aesKey, iv);
+                }
+            }).start();
+
         } catch (Exception e) {
             // Upload failed
             e.printStackTrace();
@@ -183,6 +249,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
+    //helper method for AES key
     private SecretKey obtainAESKey() throws Exception {
         KeyStore keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
         keyStore.load(null);
@@ -199,22 +268,32 @@ public class MainActivity extends AppCompatActivity {
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                     .setRandomizedEncryptionRequired(false)
+                    .setKeySize(256) // Set the key size to 256 bits
                     .build());
 
             return keyGenerator.generateKey();
         }
     }
 
-    private void uploadEncryptedFile(Uri selectedFileUri, SecretKey aesKey) {
+
+    //helper method for IV
+    private byte[] getinitVector() {
+        //Generates a initialization vector
+        byte[] iv = new byte [12];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(iv);
+
+        return iv;
+    }
+
+
+    //encrypt and upload file to Firebase
+    private void uploadEncryptedFile(Uri selectedFileUri, SecretKey aesKey, byte[] iv) {
         try {
-            //Generates a initialization vector
-            byte[] iv = new byte [12];
-            SecureRandom secureRandom = new SecureRandom();
-            secureRandom.nextBytes(iv);
 
             // Use AES with key from keystore and the generated IV
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, aesKey, new GCMParameterSpec(128, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, aesKey, new GCMParameterSpec(128, iv, 0, 12));
 
             // Initialize the input stream for the selected file
             InputStream inputStream = getContentResolver().openInputStream(selectedFileUri);
@@ -268,6 +347,60 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    private void sendFileToBackupServer(Uri fileUri, SecretKey aesKey, byte[] iv) {
+        try {
+            if (socket != null) {
+                OutputStream outputStream = socket.getOutputStream();
+
+                InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                String fileName = getFileNameFromUri(fileUri);
+                ByteArrayOutputStream encryptedData = encryptFile(inputStream, aesKey, iv);
+
+                // Send the filename and encrypted data
+                outputStream.write(("filename:" + fileName + "\r\n").getBytes());
+                outputStream.write(encryptedData.toByteArray());
+
+                // Add the "END_OF_FILE" delimiter separately for each file
+                outputStream.write("END_OF_FILE\r\n".getBytes());
+                outputStream.flush();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    private ByteArrayOutputStream encryptFile(InputStream inputStream,  SecretKey aesKey, byte[] iv) {
+        try {
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, aesKey, new GCMParameterSpec(128, iv, 0, 12));
+
+            ByteArrayOutputStream encryptedOutput = new ByteArrayOutputStream();
+            CipherOutputStream cipherOutputStream = new CipherOutputStream(encryptedOutput, cipher);
+
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                cipherOutputStream.write(buffer, 0, bytesRead);
+            }
+
+            // Close the CipherOutputStream
+            cipherOutputStream.close();
+
+            return encryptedOutput;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
+
+
     // Add a helper method to get the file extension from a Uri
     private String getFileExtension(Uri uri) {
         String extension = null;
@@ -315,6 +448,25 @@ public class MainActivity extends AppCompatActivity {
         }
         return result;
     }
+
+
+
+    //gets file name but includes extension -- for backup server
+    private String getFileNameFromUri(Uri fileUri) {
+        String fileName = "default_filename";
+        Cursor cursor = getContentResolver().query(fileUri, null, null, null, null);
+
+        if (cursor != null) {
+            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            cursor.moveToFirst();
+            fileName = cursor.getString(nameIndex);
+            cursor.close();
+        }
+
+        return fileName;
+    }
+
+
 
     //Goes to the file download UI
     public void goToSecondActivity(View view) {
